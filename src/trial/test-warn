@@ -1,0 +1,5 @@
+#! /bin/bash
+
+. ../lib/util-helpers.bash
+
+warn you have been warned
