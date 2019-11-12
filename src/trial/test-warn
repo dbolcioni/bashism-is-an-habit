@@ -3,3 +3,4 @@
 . ../lib/util-helpers.bash
 
 warn you have been warned
+warn hidden warning 2>/dev/null
