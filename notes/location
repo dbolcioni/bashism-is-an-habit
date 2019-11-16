@@ -1,0 +1,31 @@
+Location of bash(1) function libraries
+
+Shell function libraries are used through the source(1) command, which looks up
+arguments not containing a slash on the PATH, unless the sourcepath option is
+turned off, but otherwise uses the supplied argument verbatim.
+
+Placing shell function libraries on the PATH makes them available to source(1)
+without interfering with bash(1) command lookup, provided they are not marked
+executable; in theory, however, this might catch by surprise any tools written
+under the assumption that all files under e.g. /usr/bin are executable. A very
+unscientific test on a random Fedora 30 install found a single non-executable
+file out ot 2000+, although it was indeed a shell function library from the
+MariaDB system package.
+
+Candidate PATH directories for function libraries include:
+  ~/.local/bin
+  ~/bin
+  /opt/<package>/bin
+  /usr/local/bin
+  /usr/bin
+  /bin
+
+The ~/.local/bin option seems a widely agreed upon addition to the XDG Base
+Directory Specification.
+
+The ~/bin option is firmly established in Unix and Linux tradition.
+
+The /opt/<package>/bin option is specified in the FHS 3.0.
+
+The /usr/local/bin (originally a GNU convention), /usr/bin and /bin options
+are specified in the FHS 3.0.
