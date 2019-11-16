@@ -1,7 +1,0 @@
-#! /bin/bash
-
-. ../lib/util-helpers.bash
-
-(die 33 I am dead)
-rc=$?
-[ 33 = $rc ] && echo ok || echo ko
