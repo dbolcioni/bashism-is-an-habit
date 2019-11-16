@@ -1,0 +1,25 @@
+#! /bin/bash
+
+PATH="../lib:$PATH" . parse-getopts.bash -v -t a -i 1 -i 2 r1 r2 o1 o2 t1 t2 t3 << ARG
+  onoff -v verbose somewhat chatty
+  value -t temp temporary file
+  array -i item collected items
+  required req1 first required argument
+  required req2 second
+  optional opt1 first optional argument
+  optional opt2 second optional
+  trailing rest everything else
+ARG
+printf "verbose=%s" "${verbose-unset}"
+printf " temp=%s item=" "$temp"
+for i in "${item[@]}"; do
+  printf "%s" "[$i]"
+done
+echo
+echo "req1=$req1 req2=$req2"
+echo "opt1=$opt1 opt2=$opt2"
+printf "rest="
+for i in "${rest[@]}"; do
+  printf "%s" "[$i]"
+done
+echo
