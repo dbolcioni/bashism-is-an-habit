@@ -20,7 +20,7 @@ Candidate PATH directories for function libraries include:
   /usr/bin
   /bin
 
-The ~/.local/bin option seems a widely agreed upon addition to the XDG Base
+The ~/.local/bin option seems a (widely agreed upon) addition to the XDG Base
 Directory Specification.
 
 The ~/bin option is firmly established in Unix and Linux tradition.
@@ -29,3 +29,16 @@ The /opt/<package>/bin option is specified in the FHS 3.0.
 
 The /usr/local/bin (originally a GNU convention), /usr/bin and /bin options
 are specified in the FHS 3.0.
+
+Using traditional package manager such as RPM, system originated shell function
+libraries would be installed in /bin (if essential) or /usr/bin.
+
+Only the local system administrator is expected to install ot /usr/local/bin.
+
+Third party originated shell function libraries belong under /opt, either
+under /opt/<package> or under /opt/<vendor> ... the difference being that
+<vendor> is supposedly registered with LANANA. This is also where Red Hat
+Software Collections end up.
+
+Individual users (accounts) customarily install software under ~/bin, but it
+is unclear why in some instances ~/.local/bin comes before ~/bin in the PATH.
