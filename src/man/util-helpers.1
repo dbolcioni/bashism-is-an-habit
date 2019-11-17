@@ -1,0 +1,33 @@
+.TH UTIL-HELPERS 1
+.SH NAME
+warn, die \- helper functions for shell utilities.
+.SH SYNOPSIS
+.B . /usr/lib/util-helpers.bash
+.PP
+.B warn
+[
+.I "arg \&..."
+]
+.br
+.B die
+.I "rc"
+[
+.I "arg \&..."
+]
+.SH DESCRIPTION
+The
+.B warn
+shell function echoes its arguments to standard error after prepending
+the invoking command name
+.B $0
+and a colon.
+.PP
+The
+.B die
+shell function exits with an exit code of
+.IR rc
+after passing the remaining arguments to \fIwarn\fP.
+.SH SEE ALSO
+bash(1)
+.PP
+/usr/include/sysexits.h for standard exit codes
