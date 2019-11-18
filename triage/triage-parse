@@ -1,6 +1,6 @@
 #! /bin/bash
 
-PATH="../src/lib:$PATH" . parse-getopts.bash -v -t a -i 1 -i 2 r1 r2 o1 o2 t1 t2 t3 << ARG
+PATH="../src/bin:$PATH" . parse-getopts.bash -v -t a -i 1 -i 2 r1 r2 o1 o2 t1 t2 t3 << ARG
   onoff -v verbose somewhat chatty
   value -t temp temporary file
   array -i item collected items

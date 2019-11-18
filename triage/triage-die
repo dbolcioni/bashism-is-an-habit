@@ -1,6 +1,6 @@
 #! /bin/bash
 
-. ../src/lib/util-helpers.bash
+. ../src/bin/util-helpers.bash
 
 (die 33 I am dead)
 rc=$?
