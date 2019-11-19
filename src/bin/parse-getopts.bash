@@ -3,40 +3,36 @@
 [ "$(type -t die)" = function ] || . util-helpers.bash
 
 __parse_getopts__() {
-  local _kw _opt _arg _rest _optstr=:
+  local _kw _w1 _w2 _rest _opt _arg _pk _opts _getopts=:
   local -A _optk _optv _optd
   local -a _argk _argv _argd
-  while read _kw _opt _arg _rest; do
+  while read _kw _w1 _w2 _rest; do
+    [[ ${#_argk[@]} > 0 ]] && _pk=${_argk[-1]} || _pk="${_kw-}" 
     case ${_kw-} in
-      onoff) _optstr+=${_opt-};;
-      value|array) _optstr+=${_opt-}:;;
-      required|optional|trailing) break;;
-      *) die 70 "bad specification '${_kw-}' in '${_kw-} ${_opt-} ${_arg-} ${_rest-}'";;
+      onoff) _opt="${_w1-}"; _opt=${_opt#-};_arg="${_w2-}"; _opts="$_opt";;
+      value|array) _opt="${_w1-}"; _opt=${_opt#-};_arg="${_w2-}"; _opts="$_opt:";;
+      required) _arg="${_w1-}"; _opts=@; [[ $_pk = $_kw ]] || die 70 "argument '$_kw $_arg ${_w2-} ${_rest-}' cannot follow a $_pk argument";;
+      optional) _arg="${_w1-}"; _opts=@; [[ $_pk = trailing ]] && die 70 "argument '$_kw $_arg ${_w2-} ${_rest-}' cannot follow a $_pk argument";;
+      trailing) _arg="${_w1-}"; _opts=@;;
+      *) die 70 "bad specification '${_kw-}' in '${_kw-} ${_w1-} ${_w2-} ${_rest-}'";;
     esac
-    [[ ${_opt-} =~ ^[-][[:alnum:]]$ ]] || die 70 "bad option '${_opt-}' in '$_kw ${_opt-} ${_arg-} ${_rest-}'"
-    [[ ${_arg-} =~ ^[[:alpha:]][_[:alnum:]]*$ ]] || die 70 "bad variable name '${_arg-}' in '$_kw $_opt ${_arg-} ${_rest-}'"
-    _opt=${_opt#-}
-    [[ -v _optk[$_opt] ]] && die 70 "option '-$_opt' in '$_kw- -$_opt $_arg ${_rest-}' conflicts with '${_optk[$_opt]} -$_opt ${_optv[$_opt]} ${_optd[$_opt]}'"
-    _optk[$_opt]=$_kw; _optv[$_opt]=$_arg; _optd[$_opt]="${_rest-}"
-  done
-  _rest="${_arg-}${_rest+ $_rest}"
-  _arg=${_opt-}
-  local _prev=${_kw-}
-  while true; do
-    [[ ${_arg-} =~ ^[[:alpha:]][_[:alnum:]]*$ ]] || die 70 "bad variable name '${_arg-}' in '${_kw-} ${_arg-} ${_rest-}'"
-    [[ ${#_argk[@]} > 0 ]] && _prev=${_argk[-1]}
-    case ${_kw-} in
-      required) [[ $_prev != $_kw ]] && die 70 "$_kw argument '$_arg' in '$_kw $_arg ${_rest-}' cannot follow non required arguments";;
-      optional|trailing) [[ trailing = $_prev ]] && die 70 "$_kw argument '$_arg' in '$_kw $_arg ${_rest-}' cannot follow the trailing argument";;
-      *) die 70 "bad specification '${_kw-}' in '${_kw-} $_arg ${_rest-}'";;
-    esac
-    _argk+=($_kw); _argv+=($_arg); _argd+=("${_rest-}")
-    read _kw _arg _rest || break
+    [[ "$_arg" =~ ^[[:alpha:]][_[:alnum:]]*$ ]] || die 70 "bad variable name '$_arg' in '$_kw ${_w1-} ${_w2-} ${_rest-}'"
+    if [[ $_opts = @ ]]; then
+      _argk+=($_kw); _argv+=($_arg); _argd+=("${_w2-}${_rest+ $_rest}")
+    elif [[ ${#argk[@]} > 0 ]]; then
+      die 70 "option '${_w1-}' in '$_kw ${_w1-} ${_w2-} ${_rest-}' cannot follow arguments"
+    elif ! [[ "${_w1-}" =~ ^[-][[:alnum:]]$ ]]; then
+      die 70 "bad option '${_w1-}' in '$_kw ${_w1-} ${_w2-} ${_rest-}'"
+    elif [[ -v _optk[$_opt] ]]; then
+      die 70 "option '$_w1' in '$_kw $_w1 $_arg ${_rest-}' clashes with '${_optk[$_opt]} $_w1 ${_optv[$_opt]} ${_optd[$_opt]}'"
+    else
+      _optk[$_opt]=$_kw; _optv[$_opt]=$_arg; _optd[$_opt]="${_rest-}"; _getopts+=$_opts;
+    fi
   done
   if ! [[ -v _optk[h] ]] ; then
-    _optk[h]=help; _optstr+=h
+    _optk[h]=help; _getopts+=h
   fi
-  while getopts $_optstr _opt; do
+  while getopts $_getopts _opt; do
     if [[ : = "$_opt" ]]; then
       die 64 "argument after -$OPTARG missing"
     elif [[ '?' = "$_opt" ]]; then
