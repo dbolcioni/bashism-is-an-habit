@@ -1,0 +1,118 @@
+Parsing utility (short) options and arguments.
+
+Parsing command line options and arguments is one of the earliest chores a
+POSIX compliant utility needs to perform, and being quite standardized it
+should lend itself well to library support.
+
+The challenge lies in balancing expressiveness with the limitations of the
+shell as a programming language.
+
+1) Handcrafted parsing.
+
+Simple helpers can simplify handcrafted parsing of a POSIX compliant bash
+utility, as illustrated by the following fragment:
+
+  #! /bin/bash
+
+  . option-argument-parsing-helpers.bash
+
+  usage() {
+    echo "Usage: ${0##*/} [OPTIONS] HOSTNAME [PORT [ALTERNATE_PORT ...]] 
+    cat <<- EOU
+	-h	help
+	-o ITEM additional options (repeatable)
+	-t TEMPFILE temporary file
+	-v 	verbose operation
+	EOU
+  }
+
+  # The `badarg` function sourced above is assumed to be:
+  # badarg() {
+  #   warn "$@"
+  #   usage 1>&2
+  #   exit 64  # EX_USAGE from sysexits.h
+  # }
+
+  while getopts :ho:t:v opt; do
+    case $opt in
+      h) usage ;;
+      o) switches+=("$OPTARG") ;;
+      t) tempfile="$OPTARG ;;
+      v) verbose= ;;
+      :) badarg "missing argument after -$OPTARG" ;;
+      ?) badarg "unrecognized option -$OPTARG" ;;
+    esac
+  done
+  shift $((OPTIND - 1))
+
+  # Check semantics ...
+  check_tempfile "${tempfile-}" || badarg "invalid tempfile in -t '$tempfile'"
+
+  # Process $@ ...
+  [[ $# = 0 ]] && badarg "required argument HOStNAME missing"
+  hostname="$1"; shift
+  if [[ $# > 0 ]]; then
+    port="$1"
+    shift
+  fi
+  if [[ $# > 0 ]]; then
+    alternate_port+=("$@")
+  fi
+
+The above relies on the convention that a `usage` function will be available to
+provide usage guidelines, as is customary for utilities, which is not the most
+elegant design but seems an acceptable tradeoff.
+
+A more serious problem is that the above, although formulaic, is repetitive and
+prone to subtle bugs: the ? case actually matches any single character, where
+the intent is to match $opt being set to the '?' character.
+
+Furthermore, the usage text needs to be manually kept in sync with the options,
+and the getopts(1) string with the case statement.
+
+2) Expressive helper functions.
+
+Consider the following:
+
+  #! /bin/bash
+  . expressive-option-argument-parsing-helpers.bash
+
+  option -h help
+  option -o repeatable switches additional options
+  option -t var tempfile temporary file
+  option -v switch verbose operation
+  argument required hostname 
+  argument optional port
+  argument trailing alternate_port
+  parse_command_line
+
+  check_port "$port" || badarg "invalid port '$port'"
+
+The above unfortunately needs to pollute the top level namespace with state
+variables in order to carry the information supplied when calling into the
+expressive helper functions all the way into `parse_command_line` and
+possibly `badarg` invocations. Abuse of underscores can mitigate this.
+
+3) Generated helper functions.
+
+Consider the following:
+
+  #! /bin/bash
+
+  . generate-option-argument-parsing-helpers.bash << EOA
+    option -h help
+    option -o repeatable switches additional options
+    option -t var tempfile temporary file
+    option -v switch verbose operation
+    argument required hostname 
+    argument optional port
+    argument trailing alternate_port
+  EOA
+  parse_command_line
+
+  check_port "$port" || badarg "invalid port '$port'"
+
+where definitions for 'parse_command_line' and 'badarg' functions are
+constructed inside the sourced .bash file, to be made available to the
+caller using eval(1). Confining the processing inside a function would
+use local variables without polluting the caller with state variables.
