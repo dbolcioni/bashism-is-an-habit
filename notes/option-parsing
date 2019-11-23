@@ -84,7 +84,7 @@ Consider the following:
   argument required hostname 
   argument optional port
   argument trailing alternate_port
-  parse_command_line
+  parse_command_line "$@"
 
   check_port "$port" || badarg "invalid port '$port'"
 
@@ -93,6 +93,9 @@ variables in order to carry the information supplied when calling into the
 expressive helper functions all the way into `parse_command_line` and
 possibly `badarg` invocations. Abuse of underscores can mitigate this.
 
+The `parse_command_line` function cannot access utility arguments, they have
+to be passed in.
+
 3) Generated helper functions.
 
 Consider the following:
@@ -100,15 +103,15 @@ Consider the following:
   #! /bin/bash
 
   . generate-option-argument-parsing-helpers.bash << EOA
-    option -h help
-    option -o repeatable switches additional options
-    option -t var tempfile temporary file
-    option -v switch verbose operation
-    argument required hostname 
-    argument optional port
-    argument trailing alternate_port
+      option -h help
+      option -o repeatable switches additional options
+      option -t var tempfile temporary file
+      option -v switch verbose operation
+      argument required hostname 
+      argument optional port
+      argument trailing alternate_port
   EOA
-  parse_command_line
+  parse_command_line "$@"
 
   check_port "$port" || badarg "invalid port '$port'"
 
@@ -116,3 +119,29 @@ where definitions for 'parse_command_line' and 'badarg' functions are
 constructed inside the sourced .bash file, to be made available to the
 caller using eval(1). Confining the processing inside a function would
 use local variables without polluting the caller with state variables.
+
+3b) Generate processing code and functions.
+
+Consider the following:
+
+  #! /bin/bash
+
+  . process-options-arguments.bash << EOA
+      option -h help
+      option -o repeatable switches additional options
+      option -t var tempfile temporary file
+      option -v switch verbose operation
+      argument required hostname 
+      argument optional port
+      argument trailing alternate_port
+  EOA
+
+  check_port "$port" || badarg "invalid port '$port'"
+
+where instead of generating a `parse_command_line` function, code to the same
+effect is generated through a function, avoiding name pollution, and then
+executed using eval(1) inside the sourced script; this allows it to access and
+alter $@ naturally, including using shift(1).
+
+The 'usage' and 'badarg' functions can still be generated and made available
+using eval(1).
